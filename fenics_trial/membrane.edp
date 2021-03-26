@@ -1,0 +1,191 @@
+// Shape optimization of a membrane
+// Governing equation:
+// div(h grad(u)) + f = 0 on D
+// u = 0 on dD
+// Objective function: 
+// J(h) = \int_D fu dx
+// Adjoint equation:
+// div(h grad(p)) - f = 0 on D
+// p = 0 on dD
+// Adjoint solution comes for free! p = -u!
+// Constraint:
+// h > hmin
+// h < hmax
+// \int_D h dx = hfrac
+// P(l) = max(hmin, min(hmax, h + l))
+// Goal: find l such that \int_D P(l) dx = hfrac.
+
+//// Bisection method:
+//// Goal: solve f(x) = 0
+//// Start with two guesses x0 and x1 st the solution is in [x0, x1]
+//// such that f(x0) < 0 and f(x1) > 0, or vice versa.
+//// -> f(x0) < 0 and f(x1) > 0 
+//// [x0, x1] = [x0, (x0 + x1)/2] , [(x0 + x1)/2, x1]
+////  -> f0 < 0 , fmid > 0 , f1 > 0.
+//// x0 <- x0 ,  x1 <- (x0 + x1)/2
+//// Repeat until (x1 - x0) < tol
+//// Solution: (x0 + x1)/2
+
+// Initialize domain
+real La = 1.0;
+real Lb = 1.0;
+real xc = 0.75*La;
+real yc = 0.5*Lb;
+real F = 5.0;
+real r = 0.05;
+
+// Build mesh
+border a(t=0, Lb){x=0; y=Lb-t; label=1;}
+border b(t=0, La){x=t; y=0; label=2;}
+border c(t=0, Lb){x=La; y=t; label=3;}
+border d(t=0, La){x=La-t; y=Lb; label=4;}
+
+int nmesh = 50;
+mesh Th = buildmesh(a(nmesh) + b(nmesh) + c(nmesh) + d(nmesh));
+
+// Define physical variables
+fespace Vh2d(Th, P2);
+
+//// Displacement
+Vh2d u;
+Vh2d v; // <- This is NOT the adjoint variable!
+
+// //// Adjoint variable
+// Vh2d p;
+// Vh2d q;
+
+//// Thickness
+real h0 = 0.25;
+Vh2d h = h0;
+Vh2d hr; 
+
+real dh;
+real hmin = 0.1;
+real hmax = 1.0;
+real hfrac = int2d(Th)(h0);
+
+real l0 = 0.0;
+real l1 = 1.0;
+real lmid; 
+real lerr = 1e-3;
+
+real proj0, proj1, projmid;
+
+// Define loads
+func f = F*exp(-((x - xc)^2 + (y - yc)^2)/(2.0*r*r));
+
+// Optimization loop - Gradient descent
+real eps = 0.01;
+real dt;
+int maxiter = 100;
+
+//// Regularization for h
+real alpha = 0.01;
+problem regularization(hr, v)
+	= int2d(Th)(
+		alpha^2*(dx(hr)*dx(v) + dy(hr)*dy(v)) + hr*v
+	)
+	- int2d(Th)(
+		h*v
+	)
+;
+
+for (int iter = 0; iter < maxiter; iter++)
+{
+	//// Solve primal problem
+	solve Membrane (u, v)
+		= int2d(Th)(
+			h*(dx(u)*dx(v) + dy(u)*dy(v))
+		)
+		- int2d(Th)(
+			f*v
+		)
+		+ on(1, u=0)
+		+ on(2, u=0)
+		+ on(3, u=0)
+		+ on(4, u=0)
+	;
+
+	// //// Solve the adjoint problem
+	// solve Adjoint (p, q)
+	// 	= int2d(Th)(
+	// 		h*(dx(p)*dx(q) + dy(p)*dy(q))
+	// 	)
+	// 	+ int2d(Th)(
+	// 		f*q
+	// 	)
+	// 	+ on(1, p=0)
+	// 	+ on(2, p=0)
+	// 	+ on(3, p=0)
+	// 	+ on(4, p=0)
+	// ;
+
+	//// Step forward - compute gradient
+	// Vh2d dJ = (dx(u)*dx(p) + dy(u)*dy(p));
+	Vh2d dJ = -(dx(u)*dx(u) + dy(u)*dy(u));
+
+	dh = max(h[].max, -h[].min);
+	dt = eps/dh;
+	h = h - dt*dJ;
+
+	//// Enforce thickness constraints
+	////// Implement bisection algorithm to find optimal l!
+	proj0 = int2d(Th)(max(hmin, min(hmax,(h + l0))));
+	proj1 = int2d(Th)(max(hmin, min(hmax,(h + l1))));
+
+	///// Choose an appropriate starting l0 and l1
+	while (proj0 > hfrac)
+	{
+		l0 -= 0.1;
+		proj0 = int2d(Th)(max(hmin, min(hmax,(h + l0))));
+	}
+
+	while (proj1 < hfrac)
+	{
+		l1 += 0.1;
+		proj1 = int2d(Th)(max(hmin, min(hmax,(h + l1))));
+	}
+
+	////// Bisection algorithm
+	while ((l1 - l0) > lerr)
+	{
+		lmid = 0.5*(l0 + l1);
+		projmid = int2d(Th)(max(hmin, min(hmax,(h + lmid))));
+
+		if (projmid < hfrac)
+		{
+			l0 = lmid;
+			proj0 = projmid;
+		}
+		else
+		{
+			l1 = lmid;
+			proj1 = projmid;
+		}
+	}
+
+	h = max(hmin, min(hmax, h + lmid));
+
+	//// Perform H1 regularization
+	regularization;
+	h = hr;
+	plot(h, fill=1, wait=false, value=false);
+}
+
+// Plot solutions
+plot(h, fill=1, wait=true, value=false);
+// plot(u, fill=1, wait=true, value=false);
+// savemesh(Th, "membrane.msh");
+// ofstream file("deflection.dat");
+// file << u[];
+
+// Declare yourself a genius!
+//============================
+
+// ... but you still need to work...
+
+// Assignment: 
+// J(h) = \int_D (1/2) || u - u0 ||^2 dx.
+// Here, u0 is some specified displacement field. 
+// For instance, choose 
+// u0(x,y) = U*exp(-((x - x0)^2 + (y - y0^2))/(2*dx*dx))
