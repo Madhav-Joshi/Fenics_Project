@@ -38,6 +38,7 @@ xc = 1.5
 yc = 1
 
 f = Expression('F*exp(-((pow(x[0]-xc, 2) + pow(x[1] - yc, 2))/(2*pow(r,2))))', degree=1, F=F, xc=xc, yc=yc, r=r)
+u0 = Expression('U*exp(-((pow(x[0]-x0, 2) + pow(x[1] - y0, 2))/(2*pow(sigma,2))))', degree=1, U=1, x0=0.5, y0=0.3, sigma=1)
 
 def Max(a,b):
     return (a+b+abs(a-b))/2
@@ -66,7 +67,7 @@ for i in range(max_iter):
 
     p = TrialFunction(V)
     a2 = h*dot(grad(p),grad(v))*dx
-    L2 = dot(-f,v)*dx
+    L2 = dot(abs(u-u0),v)*dx
     p = Function(V)
     solve(a2==L2,p,bc)
 
@@ -78,7 +79,7 @@ for i in range(max_iter):
     # proj1 = assemble(max(hmin, min(hmax,(h + l1)))*dx(mesh))
 
     proj0 = assemble(Max(hmin, Min(hmax,(h + l0)))*dx(mesh))
-    proj1 = assemble(Max(hmin,Min(hmax,(h + l1)))*dx(mesh))
+    proj1 = assemble(Max(hmin, Min(hmax,(h + l1)))*dx(mesh))
 
     # Bisection algorithm
     ## Choose appropriate starting l0 and l1

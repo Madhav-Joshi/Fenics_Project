@@ -1,5 +1,5 @@
 # Solving for menbrane thickness
-# Minimizing J(h) = int2d_D (fu) dx
+# Minimizing J(h) = int2d_D (f/u) dx
 
 from fenics import *
 import numpy as np 
@@ -66,7 +66,7 @@ for i in range(max_iter):
 
     p = TrialFunction(V)
     a2 = h*dot(grad(p),grad(v))*dx
-    L2 = dot(-f,v)*dx
+    L2 = dot(f/u**2,v)*dx
     p = Function(V)
     solve(a2==L2,p,bc)
 
