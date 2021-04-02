@@ -6,6 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
+# For showing plots continuously
+plt.ion()
+plt.show()
+
 # Create mesh and function space
 mesh = Mesh('./Square.xml')
 mesh = refine(mesh)
@@ -38,7 +42,10 @@ xc = 1.5
 yc = 1
 
 f = Expression('F*exp(-((pow(x[0]-xc, 2) + pow(x[1] - yc, 2))/(2*pow(r,2))))', degree=1, F=F, xc=xc, yc=yc, r=r)
-u0 = Expression('U*exp(-((pow(x[0]-x0, 2) + pow(x[1] - y0, 2))/(2*pow(sigma,2))))', degree=1, U=1, x0=0.5, y0=0.3, sigma=1)
+u0 = Expression('U*exp(-((pow(x[0]-x0, 2) + pow(x[1] - y0, 2))/(2*pow(sigma,2))))', degree=1, U=1, x0=xc, y0=yc, sigma=0.1)
+
+u0_plot = interpolate(u0,V)
+plot(u0_plot)
 
 def Max(a,b):
     return (a+b+abs(a-b))/2
@@ -55,7 +62,7 @@ def regularization(h):
     solve(a==L,hr)
     return hr
 
-max_iter = 10
+max_iter = 100
 dt = 0.01 # Gradient desccent variable
 
 for i in range(max_iter):
@@ -67,7 +74,7 @@ for i in range(max_iter):
 
     p = TrialFunction(V)
     a2 = h*dot(grad(p),grad(v))*dx
-    L2 = dot(abs(u-u0),v)*dx
+    L2 = dot(-(u-u0),v)*dx
     p = Function(V)
     solve(a2==L2,p,bc)
 
@@ -104,10 +111,14 @@ for i in range(max_iter):
     h = Max(hmin, Min(hmax, h + lmid))
 
     h = regularization(h)
+    plot(h)
+    plt.pause(0.001)
 
 f_plot = interpolate(f,V)
-# plot(f_plot)
-# plt.show()
+plot(f_plot)
+plt.show()
 plot(mesh)
 plot(h)
+plt.show()
+plot(u)
 plt.show()

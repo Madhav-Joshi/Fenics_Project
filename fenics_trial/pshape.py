@@ -6,12 +6,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
+# For showing plots continuously
+plt.ion()
+fig = plt.figure()
+ax = fig.add_subplot(1,1,1,projection = '3d')
+plt.show()
+
 # Create mesh and function space
-mesh = Mesh('./Square.xml')
+mesh = Mesh('fenics_trial/Square.xml')
 mesh = refine(mesh)
 mesh = refine(mesh)
 mesh = refine(mesh)
 mesh = refine(mesh)
+
+mshco = mesh.coordinates()
+mshcox = mshco[:,0]
+mshcoy = mshco[:,1]
 
 V = FunctionSpace(mesh, 'P', 1)
 
@@ -103,6 +113,14 @@ for i in range(max_iter):
     h = Max(hmin, Min(hmax, h + lmid))
 
     h = regularization(h)
+    # plot(h)
+    vertex_values_h = h.compute_vertex_values(mesh)
+    ax.clear()
+    ax.plot_trisurf(mshcox,mshcoy,vertex_values_h,cmap = plt.cm.jet)
+    if i == max_iter-1:
+        plt.pause(10)
+    else:
+        plt.pause(0.01)
 
 f_plot = interpolate(f,V)
 # plot(f_plot)
