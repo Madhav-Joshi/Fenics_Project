@@ -76,7 +76,7 @@ def regularization(h):
     solve(a==L,hr)
     return hr
 
-max_iter = 10
+max_iter = 50
 dt = 0.2 # Gradient desccent variable
 J_arr = np.array([])
 
@@ -148,7 +148,7 @@ for i in range(max_iter):
     ax2.scatter(i,J)
 
     if i==max_iter-1:
-        plt.pause(5)
+        plt.pause(10)
     else:
         plt.pause(0.01)
 
