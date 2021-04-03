@@ -9,7 +9,14 @@ from mpl_toolkits import mplot3d
 # For showing plots continuously
 plt.ion()
 fig = plt.figure()
-ax = fig.add_subplot(1,1,1,projection = '3d')
+ax1 = fig.add_subplot(2,2,2,projection = '3d')
+ax2 = fig.add_subplot(2,2,1)
+ax2.set_title('Objective Function Plot')
+ax2.set_xlabel('Iteration number')
+ax2.set_ylabel('J(h)')
+ax3 = fig.add_subplot(2,2,3,projection = '3d')
+ax3.set(xlabel='X',ylabel='Y',zlabel='Load (f)')
+ax4 = fig.add_subplot(2,2,4,projection = '3d')
 plt.show()
 
 # Create mesh and function space
@@ -35,7 +42,8 @@ u = TrialFunction(V) # Displacement
 p = TrialFunction(V) 
 v = TestFunction(V) 
 h0 = 0.25 # Thickness
-h = h0
+h = Constant(h0)
+h = interpolate(h,V)
 hmin = 0.1
 hmax = 1
 l0 = 0 # Bisecetion starting guess
@@ -48,6 +56,10 @@ xc = 1.5
 yc = 1
 
 f = Expression('F*exp(-((pow(x[0]-xc, 2) + pow(x[1] - yc, 2))/(2*pow(r,2))))', degree=1, F=F, xc=xc, yc=yc, r=r)
+f_int = interpolate(f,V)
+f_mesh = f_int.compute_vertex_values(mesh)
+# plot(f_int)
+ax3.plot_trisurf(mshcox,mshcoy,f_mesh,cmap = plt.cm.jet)
 
 def Max(a,b):
     return (a+b+abs(a-b))/2
@@ -65,7 +77,9 @@ def regularization(h):
     return hr
 
 max_iter = 10
-dt = 0.01 # Gradient desccent variable
+dt = 0.2 # Gradient desccent variable
+J_arr = np.array([])
+
 
 for i in range(max_iter):
     u = TrialFunction(V)
@@ -81,6 +95,7 @@ for i in range(max_iter):
     solve(a2==L2,p,bc)
 
     dJ = dot(grad(u),grad(p))
+    ddt = dt/np.max(np.abs(np.array(h.vector())))
 
     h = h - dt*dJ
 
@@ -113,14 +128,40 @@ for i in range(max_iter):
     h = Max(hmin, Min(hmax, h + lmid))
 
     h = regularization(h)
+
     # plot(h)
     vertex_values_h = h.compute_vertex_values(mesh)
-    ax.clear()
-    ax.plot_trisurf(mshcox,mshcoy,vertex_values_h,cmap = plt.cm.jet)
-    if i == max_iter-1:
-        plt.pause(10)
+    ax1.clear()
+    ax1.set(xlabel='X',ylabel='Y',zlabel='Thickness (h)')
+    ax1.plot_trisurf(mshcox,mshcoy,vertex_values_h,cmap = plt.cm.jet)
+
+    # plot(u)
+    vertex_values_u = u.compute_vertex_values(mesh)
+    ax4.clear()
+    ax4.set(xlabel='X',ylabel='Y',zlabel='Displacement (u)')
+    ax4.plot_trisurf(mshcox,mshcoy,vertex_values_u,cmap = plt.cm.jet)
+
+    # plot objective function
+    J = assemble(f_int*u*dx(mesh))
+    J_arr = np.append(J_arr,J)
+    print(J)
+    ax2.scatter(i,J)
+
+    if i==max_iter-1:
+        plt.pause(5)
     else:
         plt.pause(0.01)
+
+# ax1.set_title('Thickness (h) Plot')
+# ax1.set(xlabel='X',ylabel='Y',zlabel='Thickness')
+# ax1.plot_trisurf(mshcox,mshcoy,vertex_values_h,cmap = plt.cm.jet)
+# 
+# x_J = np.linspace(1,len(J_arr),len(J_arr))
+# plt.scatter(x_J,J_arr)
+
+plt.show()
+
+
 
 f_plot = interpolate(f,V)
 # plot(f_plot)

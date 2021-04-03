@@ -1,6 +1,16 @@
+import matplotlib.pyplot as plt
 import numpy as np
-# plot a 3D surface like in the example mplot3d/surface3d_demo
-X = np.arange(-5, 5, 0.25)
-Y = np.arange(-5, 5, 0.25)
-X, Y = np.meshgrid(X, Y)
-print(X)
+
+x = np.linspace(0, 10*np.pi, 100)
+y = np.sin(x)
+
+plt.ion()
+fig = plt.figure()
+ax = fig.add_subplot(111)
+line1, = ax.plot(x, y, 'b-')
+
+for phase in np.linspace(0, 10*np.pi, 100):
+    line1.set_ydata(np.sin(0.5 * x + phase))
+    fig.canvas.draw()
+    if phase == np.linspace(0, 10*np.pi, 100)[-1]:
+        plt.show()
