@@ -76,7 +76,7 @@ def regularization(h):
     solve(a==L,hr)
     return hr
 
-max_iter = 50
+max_iter = 10
 dt = 0.2 # Gradient desccent variable
 J_arr = np.array([])
 
@@ -95,10 +95,11 @@ for i in range(max_iter):
     solve(a2==L2,p,bc)
 
     dJ = dot(grad(u),grad(p))
+    print(h)
     ddt = dt/np.max(np.abs(np.array(h.vector())))
 
-    h = h - dt*dJ
-
+    h = h - ddt*dJ
+    
     # proj0 = assemble(max(hmin, min(hmax,(h + l0)))*dx(mesh))
     # proj1 = assemble(max(hmin, min(hmax,(h + l1)))*dx(mesh))
 
@@ -150,7 +151,7 @@ for i in range(max_iter):
     if i==max_iter-1:
         plt.pause(10)
     else:
-        plt.pause(0.01)
+        plt.pause(0.001)
 
 # ax1.set_title('Thickness (h) Plot')
 # ax1.set(xlabel='X',ylabel='Y',zlabel='Thickness')
