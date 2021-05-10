@@ -36,8 +36,16 @@ u = Function(V)
 solve(a == L, u, bc)
 
 # Plot solution and mesh
-# plot(u)
-# plot(mesh)
+fig = plt.figure()
+fig.show()
+fig.clear()
+ax = fig.add_subplot(111)
+p = plot(u,mode="warp", title='Temperature Field (axes dimension in mm)')
+#m = plot(mesh)
+#fig.gca().set_zlim((0, 2))
+ax.set(title='Poisson Equation')
+fig.colorbar(p)
+fig.canvas.draw()
 
 # Save solution to file in VTK format
 # vtkfile = File('poisson/solution.pvd')
@@ -56,12 +64,12 @@ import numpy as np
 # print('error_L2  =', error_L2)
 # print('error_max =', error_max)
 
-mshco = mesh.coordinates()
+'''mshco = mesh.coordinates()
 x = mshco[:,0]
 y = mshco[:,1]
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1,projection = '3d')
 sca = ax.plot_trisurf(x,y,vertex_values_u,cmap=plt.cm.jet)
-
+'''
 # Hold plot
 plt.show()
