@@ -13,28 +13,26 @@ fig.show()
 
 
 set_log_active(False)
-
 # Variables
 alpha = 18.7 # Thermal diffusivity mm^2/s
 k = 63.9e3 # Thermal conductivity W/(mm-K)
-vel = 8.33 # Velocity in mm/sec
+vel = 500/60 # Velocity in mm/sec
 qmax = 113.35e6 # Max power per unit area supplied to the material, Power of laser = integral of q over laser circle
 r_b = 2 # Radius of the beam in mm where intensity becomes 1/e 
 sigma_z = 1e-5 # Penetration depth in z direction in mm
-tf = 50/vel           # final time in seconds########################
-num_steps = 50     # number of time steps
-dt = tf / num_steps # time step size
-T0_int = 25
-T0 = Constant(T0_int) # Ambient temperature in Kelvin or deg C anything will work
+T0 = Constant(25) # Ambient temperature in Kelvin or deg C anything will work
+## Time discretisation parameters dt, num_steps, tf are below mesh definition 
 
 tol = 1e-6
 
 # Define mesh 
 L = 25.0 # Length of cube/cuboid
-n = 8 # Number of cells in x,y,z direction
+n = 10 # Number of cells in x,y,z direction
 
-x0,y0,z0 = -L,-L/2,0
-x1,y1,z1 = 3*L,L/2,-L
+x0,y0,z0 = -L/2,-L/2,0
+x1,y1,z1 = 3*L/2,L/2,-L
+
+tf = abs((x1-x0)/vel/2)           # final time in seconds
 
 mesh = BoxMesh(Point(x0,y0,z0),Point(x1,y1,z1),int(n*abs(x1-x0)/L),int(n*abs(y1-y0)/L),int(n*abs(z1-z0)/L))
 
@@ -53,9 +51,12 @@ ref.mark(cell, True)
 
 mesh = refine(mesh,cell)
 mesh = refine(mesh,cell)
-#mesh = refine(mesh,cell)
 
 # plot(mesh)
+
+# Time discretisation
+dt = mesh.hmin()/vel # time step size
+num_steps = int(tf/dt)     # number of time steps
 
 # Define Function Space
 V = FunctionSpace(mesh, 'P', 1)
@@ -116,18 +117,22 @@ def hard_dep():
     y_max = y[x==x_T_max]
     z_max = z[x==x_T_max]
     T_yz_max = vertex_values_T[x==x_T_max]
+    try:
+        hard_depth = np.min(z_max[727<T_yz_max])
+    except:
+        hard_depth = 0
 
-    hard_depth = np.min(z_max[727<T_yz_max])
     return hard_depth
 
 def depth_vs_vel():
-    global vel,T_n,tf,dt
+    global vel,T_n,tf,dt,num_steps
     vel_arr = np.array([])
     depth_arr = np.array([])
-    for i in np.linspace(1,10,6): 
+    for i in np.linspace(1,16,16): 
         vel = i
-        tf = 50/vel
-        dt = tf/num_steps
+        tf = abs((x1-x0)/vel/2)           # final time in seconds
+        dt = mesh.hmin()/vel # time step size
+        num_steps = int(tf/dt)     # number of time steps
         T_n = interpolate(T0, V)
         vel_arr = np.append(vel_arr,vel)
         dep = hard_dep()
@@ -154,17 +159,22 @@ def hard_wid():
     z_max = z[x==x_T_max]
     T_yz_max = vertex_values_T[x==x_T_max]
 
-    hard_width = np.max(y_max[727<T_yz_max])
+    try:
+        hard_width = np.max(y_max[727<T_yz_max])
+    except:
+        hard_width = 0
+    
     return hard_width 
 
 def width_vs_vel():
-    global vel, T_n, tf, dt
+    global vel, T_n, tf, dt, num_steps
     vel_arr = np.array([])
     width_arr = np.array([])
-    for i in np.linspace(1,10,6):
+    for i in np.linspace(1,16,16):
         vel = i
-        tf = 50/vel
-        dt = tf/num_steps
+        tf = abs((x1-x0)/vel/2)           # final time in seconds
+        dt = mesh.hmin()/vel # time step size
+        num_steps = int(tf/dt)     # number of time steps
         T_n = interpolate(T0, V)
         vel_arr = np.append(vel_arr,vel)
         wide = hard_wid()
@@ -178,8 +188,8 @@ def width_vs_vel():
     plt.title('Hardened Width vs Velocity')
     plt.show()
 
-depth_vs_vel()
-
+#depth_vs_vel()
+width_vs_vel()
 '''
 mshco = mesh.coordinates()
 x = mshco[:,0]

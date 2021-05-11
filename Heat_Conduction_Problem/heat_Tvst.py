@@ -13,19 +13,16 @@ fig.show()
 
 
 set_log_active(False)
-
 # Variables
-tf = 6           # final time in seconds
-num_steps = 60     # number of time steps
-dt = tf / num_steps # time step size
 alpha = 18.7 # Thermal diffusivity mm^2/s
 k = 63.9e3 # Thermal conductivity W/(mm-K)
-vel = 8.33 # Velocity in mm/sec
+vel = 500/60 # Velocity in mm/sec
 qmax = 113.35e6 # Max power per unit area supplied to the material, Power of laser = integral of q over laser circle
 r_b = 2 # Radius of the beam in mm where intensity becomes 1/e 
 sigma_z = 1e-5 # Penetration depth in z direction in mm
 T0_int = 25
 T0 = Constant(T0_int) # Ambient temperature in Kelvin or deg C anything will work
+## Time discretisation parameters dt, num_steps, tf are below mesh definition 
 
 tol = 1e-6
 
@@ -35,6 +32,8 @@ n = 10 # Number of cells in x,y,z direction
 
 x0,y0,z0 = -L,-L/2,0
 x1,y1,z1 = 3*L,L/2,-L
+
+tf = abs((x1-x0)/vel/2)           # final time in seconds
 
 mesh = BoxMesh(Point(x0,y0,z0),Point(x1,y1,z1),int(n*abs(x1-x0)/L),int(n*abs(y1-y0)/L),int(n*abs(z1-z0)/L))
 
@@ -46,16 +45,19 @@ w = 3 # Refinement width as a multiple of L
 
 class Ref(SubDomain):
     def inside(self, x, on_boundary):
-        return near(x[1],0,w*r_b) and near(x[2],-w*r_b/2,w*r_b/2) 
+        return abs(x[1])<w*r_b and x[2]>-w*r_b  
 
 ref = Ref()
 ref.mark(cell, True) 
 
 mesh = refine(mesh,cell)
 mesh = refine(mesh,cell)
-#mesh = refine(mesh,cell)
 
 # plot(mesh)
+
+# Time discretisation
+dt = mesh.hmin()/vel # time step size
+num_steps = int(tf/dt)     # number of time steps
 
 # Define Function Space
 V = FunctionSpace(mesh, 'P', 1)
