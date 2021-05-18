@@ -106,7 +106,7 @@ for n in range(num_steps):
     T_n.assign(T)
 
     # Store values of temp and time in previously defined arrays
-    fixed_pt_Tarr = np.append(fixed_pt_Tarr,T(25,0,0))
+    fixed_pt_Tarr = np.append(fixed_pt_Tarr,T(abs((x1-x0)/4),0,0))
     time_arr = np.append(time_arr,t)
 
 fig1 = plt.figure()

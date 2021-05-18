@@ -29,7 +29,7 @@ tol = 1e-6
 
 # Define mesh 
 L = 25.0 # Length of cube/cuboid
-n = 10 # Number of cells in x,y,z direction
+n = 5 # Number of cells in x,y,z direction
 
 x0,y0,z0 = -L/4,-L/2,0
 x1,y1,z1 = 3*L/4,L/2,-L
@@ -50,20 +50,21 @@ ref = Ref()
 ref.mark(cell, True) 
 
 mesh = refine(mesh,cell)
-mesh = refine(mesh,cell)
+#mesh = refine(mesh,cell)
 #mesh = refine(mesh,cell)
 
-'''mshco = mesh.coordinates()
+mshco = mesh.coordinates()
 x = mshco[:,0]
 y = mshco[:,1]
 z = mshco[:,2]
-print(x)
-print(y)
-print(z)
+#print(x)
+#print(y)
+#print(z)
 
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
-ax.plot_trisurf(x,y,z)'''
-print(mesh.hmax(),mesh.hmin())
-plot(mesh)
+ax.scatter(x,y,z,alpha=0.5)
+ax.scatter(0,0,1,alpha=1,marker='x',color='black')
+'''print(mesh.hmax(),mesh.hmin())
+plot(mesh)'''
 plt.show()

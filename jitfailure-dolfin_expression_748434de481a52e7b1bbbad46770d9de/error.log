@@ -1,8 +1,0 @@
-/tmp/tmpc59yqagr/dolfin_expression_748434de481a52e7b1bbbad46770d9de.cpp: In member function ‘virtual void dolfin::dolfin_expression_748434de481a52e7b1bbbad46770d9de::eval(Eigen::Ref<Eigen::Matrix<double, -1, 1> >, Eigen::Ref<const Eigen::Matrix<double, -1, 1> >) const’:
-/tmp/tmpc59yqagr/dolfin_expression_748434de481a52e7b1bbbad46770d9de.cpp:62:27: error: ‘beta’ was not declared in this scope
-   62 |           values[0] = 2*t*beta/gamma - 2 - 2*alpha;
-      |                           ^~~~
-/tmp/tmpc59yqagr/dolfin_expression_748434de481a52e7b1bbbad46770d9de.cpp:62:46: error: ‘alpha’ was not declared in this scope; did you mean ‘isalpha’?
-   62 |           values[0] = 2*t*beta/gamma - 2 - 2*alpha;
-      |                                              ^~~~~
-      |                                              isalpha

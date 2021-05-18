@@ -27,7 +27,7 @@ tol = 1e-6
 
 # Define mesh 
 L = 25.0 # Length of cube/cuboid
-n = 10 # Number of cells in x,y,z direction
+n = 8 # Number of cells in x,y,z direction
 
 x0,y0,z0 = -L/2,-L/2,0
 x1,y1,z1 = 3*L/2,L/2,-L
@@ -102,7 +102,7 @@ for n in range(num_steps):
     # Update previous solution
     T_n.assign(T)
 
-mshco = mesh.coordinates()
+'''mshco = mesh.coordinates()
 x = mshco[:,0]
 y = mshco[:,1]
 z = mshco[:,2]
@@ -157,4 +157,4 @@ fig2 = plt.figure()
 ax21 = fig2.add_subplot(1,1,1)
 ax21.plot(x_t,z_t)
 ax21.set(xlabel='X (mm)',ylabel='Z (mm)', title='Maximum Temperature along X-axis at a Particular Depth')
-plt.show()
+plt.show()'''
