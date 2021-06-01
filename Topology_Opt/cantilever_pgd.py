@@ -163,7 +163,7 @@ def max(a, b):
 def min(a, b):
     return (a + b - abs(a - b))/2
 
-## Open files to record output
+'''## Open files to record output
 fobj = open("objective_fn_pgd.dat", 'w')
 fh = open("volume_pgd.dat", 'w')
 
@@ -174,15 +174,15 @@ fh.write('%d\t%f\n' % (0, (hvol/hfrac)))
 #### Dump objective function
 u = primal(h)
 J = assemble(dot(b,u)*dx + dot(T,u)*ds(2))
-fobj.write('%d\t%f' % (0, J))
+fobj.write('%d\t%f' % (0, J))'''
 
 ## Optimization loop
 dt = 1.0 #0.25
-max_iter = 250
+max_iter = 100
 skip = 20
 
-u_vtk = File('cantilever_deflection_pgd.pvd')
-h_vtk = File('cantilever_pgd.pvd')
+'''u_vtk = File('cantilever_deflection_pgd.pvd')
+h_vtk = File('cantilever_pgd.pvd')'''
 
 for iter in range(max_iter + 1):
     #### Solve primal and adjoint problems
@@ -228,25 +228,25 @@ for iter in range(max_iter + 1):
 
     #### Dump volume fraction
     hvol = assemble(h*dx(mesh))
-    fh.write('%d\t%f\n' % ((iter + 1), (hvol/hfrac)))
+    # fh.write('%d\t%f\n' % ((iter + 1), (hvol/hfrac))) ##########################
     # hvol = assemble(h*dx(mesh))/(Lx*Ly)
     # fh.write('%d\t%f\n' % ((iter + 1), hvol))
 
     #### Dump objective function
     J = assemble(dot(b,u)*dx + dot(T,u)*ds(2))
-    fobj.write('%d\t%f\n' % ((iter + 1), J))
+    # fobj.write('%d\t%f\n' % ((iter + 1), J)) ###########################
 
     print(f'Iteration {iter + 1}: {J}')
 
     plot(h)
     plt.pause(0.0001)
 
-    if iter % skip == 0:
+    '''if iter % skip == 0:
         u.rename('u','u')
         h.rename('h','h')
         u_vtk << (u, iter)
-        h_vtk << (h, iter)
+        h_vtk << (h, iter)'''
 
-## Close files
+'''## Close files
 fobj.close()
-fh.close()
+fh.close()'''

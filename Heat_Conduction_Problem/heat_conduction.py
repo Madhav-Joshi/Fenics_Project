@@ -102,6 +102,7 @@ for n in range(num_steps):
     # Update previous solution
     T_n.assign(T)
 
+plt.pause(15)
 '''mshco = mesh.coordinates()
 x = mshco[:,0]
 y = mshco[:,1]
