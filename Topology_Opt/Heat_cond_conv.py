@@ -7,7 +7,7 @@ fig = plt.figure()
 fig.show()
 
 # Mesh
-mesh = RectangleMesh(Point(0,0),Point(1,2),4,8,diagonal='left/right')
+mesh = RectangleMesh(Point(0,0),Point(1,2),4,8,diagonal='left/right') # left, right, left/right, crossed
 
 plot(mesh)
 # plt.pause(0.1)
@@ -21,37 +21,50 @@ facets.set_all(0) # Set values at all facets to zero
 
 ds = Measure('ds', domain=mesh, subdomain_data=facets)
 
-## Specify bottom face as heat source
-class Heat_source(SubDomain):
+## Specify left face as heat in
+class Heat_in(SubDomain):
     def inside(self, x, on_boundary):
         return (
             on_boundary and 
             near(x[0], 0.0, tol)
         )
 
-heat = Heat_source()
-heat.mark(facets, 1)
+heatin = Heat_in()
+heatin.mark(facets, 1)
 
-k0 = 267 # W/(m-K)
-q0 = 10 # J
-h = 50 # W/(m^2-K)
-T_env = 298 # K
+## Specify right face as heat out
+class Heat_out(SubDomain):
+    def inside(self, x, on_boundary):
+        return (
+            on_boundary and 
+            near(x[0], 1.0, tol)
+        )
+
+heatout = Heat_out()
+heatout.mark(facets, 2)
+
+## There is insulation on upper and bottom walls so Neumann BC with q/A=-k*dT/dn=0
+
+k = 267 # W/(m-K)
+h = 60 # W/(m^2-K)
+T_b1 = 400 # K
+T_b2 = 300 # K
 
 V = FunctionSpace(mesh,'P',1)
-k = interpolate(Constant(k0),V) 
-q = Expression('x[1] <= 0. + tol ? q0 : 0', degree=0, tol=tol, q0=q0)
+# k = interpolate(Constant(k),V) 
 
 T = TrialFunction(V)
 v = TestFunction(V)
 
-# klap(T) = q
-F = k*dot(grad(T), grad(v))*dx + q*v*dx + h*(T-T_env)*v*ds(0)
+# klaplace(T) = 0 with -k*dT/dn|(x=0 or ds(1)) = -h*(T(x)-T_b1)
+# and -k*dT/dn|(x=1 or ds(2)) = h*(T(x)-T_b2) 
+F = k*dot(grad(T), grad(v))*dx + h*(T_b1-T)*v*ds(1) + h*(T-T_b2)*v*ds(2)
 a, L = lhs(F), rhs(F)
 
 T = Function(V)
 
 solve(a==L,T)
 
-p = plot(T)
+p = plot(T) # ,mode='warp' --> for 3D plot
 fig.colorbar(p)
 plt.show()
