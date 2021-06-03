@@ -45,6 +45,7 @@ heatout.mark(facets, 2)
 
 ## There is insulation on upper and bottom walls so Neumann BC with q/A=-k*dT/dn=0
 
+# Problem variables
 k = 267 # W/(m-K)
 h = 60 # W/(m^2-K)
 T_b1 = 400 # K
@@ -56,7 +57,7 @@ V = FunctionSpace(mesh,'P',1)
 T = TrialFunction(V)
 v = TestFunction(V)
 
-# klaplace(T) = 0 with -k*dT/dn|(x=0 or ds(1)) = -h*(T(x)-T_b1)
+# -div(k*grad(T)) = 0 with -k*dT/dn|(x=0 or ds(1)) = -h*(T(x)-T_b1)
 # and -k*dT/dn|(x=1 or ds(2)) = h*(T(x)-T_b2) 
 F = k*dot(grad(T), grad(v))*dx + h*(T_b1-T)*v*ds(1) + h*(T-T_b2)*v*ds(2)
 a, L = lhs(F), rhs(F)
