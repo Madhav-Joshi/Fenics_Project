@@ -7,7 +7,7 @@ fig = plt.figure()
 fig.show()
 
 # Mesh
-mesh = RectangleMesh(Point(0,0),Point(1,2),4,8,diagonal='left/right') # left, right, left/right, crossed
+mesh = RectangleMesh(Point(0,0),Point(1,2),8,16,diagonal='left/right') # left, right, left/right, crossed
 
 plot(mesh)
 # plt.pause(0.1)
@@ -48,7 +48,7 @@ heatout.mark(facets, 2)
 # Problem variables
 k = 267 # W/(m-K)
 h = 60 # W/(m^2-K)
-T_b1 = 400 # K
+T_b1 = 500 # K
 T_b2 = 300 # K
 
 V = FunctionSpace(mesh,'P',1)
@@ -59,8 +59,10 @@ v = TestFunction(V)
 
 # -div(k*grad(T)) = 0 with -k*dT/dn|(x=0 or ds(1)) = -h*(T(x)-T_b1)
 # and -k*dT/dn|(x=1 or ds(2)) = h*(T(x)-T_b2) 
-F = k*dot(grad(T), grad(v))*dx + h*(T_b1-T)*v*ds(1) + h*(T-T_b2)*v*ds(2)
+F = k*dot(grad(T), grad(v))*dx - h*(T_b1-T)*v*ds(1) + h*(T-T_b2)*v*ds(2)
 a, L = lhs(F), rhs(F)
+# a = k*dot(grad(T), grad(v))*dx + h*(-T)*v*ds(1) + h*(T)*v*ds(2)
+# L = -h*(T_b1)*v*ds(1) - h*(-T_b2)*v*ds(2)
 
 T = Function(V)
 

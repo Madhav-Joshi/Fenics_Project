@@ -1,4 +1,4 @@
-# Minimizing the mean temperature in the metal
+# Maximizing the heat flux through the surface
 
 from fenics import *
 import numpy as np
@@ -38,7 +38,7 @@ heat.mark(facets, 1)
 # Problem Variables
 km = 267 # W/(m-K) Thermal conductivity of metal
 ka = 0.03 # W/(m-K) Thermal conductivity of air
-q_flux = 10 # J
+q_flux = 1000 # J
 h = 50 # W/(m^2-K)
 T_env = 298 # K
 
@@ -57,7 +57,7 @@ def d_zeta(t):
 
 ## Derivative of objective function with respect to charac fun
 def d_obj(T, p, c):
-    return d_zeta(c)*(km-ka)*dot(grad(T),grad(p))
+    return d_zeta(c)*(km-ka)*inner(grad(T),grad(p))
 
 # Primal problem
 v = TestFunction(V)
@@ -73,7 +73,7 @@ def primal(c):
     return T
 
 # Adjoint Problem
-La = (-v/(assemble(interpolate(Constant(1),V)*dx(mesh))))*dx 
+La = -h*v*ds(0) #(-v/(assemble(interpolate(Constant(1),V)*dx(mesh))))*dx 
 
 def adjoint(c):
     p = TrialFunction(V)
@@ -83,21 +83,21 @@ def adjoint(c):
     return p
 
 ## Regularization for c
-alfah = 0.01 ############is this value fine############ Doubt
+alfah = 0.06 ############is this value fine############ Doubt
 cr = TrialFunction(V) # Charac func c's regularization r
 ac = ((alfah**2)*dot(grad(cr),grad(v))+ cr*v)*dx # LHS a for charac func c
 
 def regularize_c(c):  
-    L = (zeta(c)*(km-ka)+ka)*v*dx
+    L = c*v*dx
     cr = Function(V)
     solve(ac == L, cr)
     return cr
 
 ## Utility functions
-def max(a, b):
+def Max(a, b):
     return (a + b + abs(a - b))/2
 
-def min(a, b):
+def Min(a, b):
     return (a + b - abs(a - b))/2
 
 ## Bisection algorithm variables
@@ -111,7 +111,7 @@ lerr = 1e-3
 
 
 ## Optimization loop
-dt = 1.0 #0.25
+dt = 2.0 #0.25
 max_iter = 1
 
 for iter in range(max_iter):
@@ -123,25 +123,25 @@ for iter in range(max_iter):
     dJ = d_obj(T,p,c)
 
     #### Update c
-    c = c - dt*dJ
+    c = c + dt*dJ ###################### + because MAXIMIZE heat flux
 
-    #### Enforce volume and max,min constraints by projection
+    #### Enforce volume and Max,Min constraints by projection
     ###### Choose initial values of l0 and l1 for Bisection algorithm
-    proj0 = assemble(max(cmin, min(cmax, c + l0))*dx(mesh))
-    proj1 = assemble(max(cmin, min(cmax, c + l1))*dx(mesh))
+    proj0 = assemble(Max(cmin, Min(cmax, c + l0))*dx(mesh))
+    proj1 = assemble(Max(cmin, Min(cmax, c + l1))*dx(mesh))
 
     while proj0 > cfrac:
         l0 -= dl
-        proj0 = assemble(max(cmin, min(cmax, c + l0))*dx(mesh))
+        proj0 = assemble(Max(cmin, Min(cmax, c + l0))*dx(mesh))
 
     while proj1 < cfrac:
         l1 += dl
-        proj1 = assemble(max(cmin, min(cmax, c + l1))*dx(mesh))
+        proj1 = assemble(Max(cmin, Min(cmax, c + l1))*dx(mesh))
 
     ###### Bisection algorithm
     while (l1 - l0) > lerr:
         lmid = (l0 + l1)/2
-        projmid = assemble(max(cmin, min(cmax, c + lmid))*dx(mesh))
+        projmid = assemble(Max(cmin, Min(cmax, c + lmid))*dx(mesh))
 
         if projmid < cfrac:
             l0 = lmid
@@ -150,20 +150,26 @@ for iter in range(max_iter):
             l1 = lmid
             proj1 = projmid
 
-    c = max(cmin, min(cmax, c + lmid))
-
-    # c = max(cmin, min(cmax, c))
+    c = Max(cmin, Min(cmax, c + lmid))
+    # c = Max(cmin, Min(cmax, c))
+    # c = project(c,V)
     c = regularize_c(c)
 
     #### Dump volume fraction
-    cvol = assemble(c*dx(mesh))
+    # cvol = assemble(c*dx(mesh))
 
     #### Dump objective function
-    J = assemble(T*dx(mesh))/assemble(interpolate(Constant(1),V)*dx(mesh))
+    J = assemble(h*(T-T_env)*ds(0)) # assemble(T*dx(mesh))/assemble(interpolate(Constant(1),V)*dx(mesh))
 
     print(f'Iteration {iter + 1}: {J}')
 
+    fig.clear()
     p = plot(c)
     fig.colorbar(p)
+    plt.pause(1)
+
+    c_arr = np.array(c.vector())
+    c_max_value = np.max(c_arr)
+    c_min_value = np.min(c_arr)
 
 plt.show()
