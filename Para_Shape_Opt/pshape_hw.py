@@ -11,8 +11,7 @@ plt.ion()
 plt.show()
 
 # Create mesh and function space
-mesh = Mesh('./Square.xml')
-mesh = refine(mesh)
+mesh = Mesh('Para_Shape_Opt/Square.xml')
 mesh = refine(mesh)
 mesh = refine(mesh)
 mesh = refine(mesh)

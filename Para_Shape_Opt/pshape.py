@@ -24,7 +24,7 @@ mesh = Mesh('fenics_trial/Square.xml')
 mesh = refine(mesh)
 mesh = refine(mesh)
 mesh = refine(mesh)
-mesh = refine(mesh)
+#mesh = refine(mesh)
 
 mshco = mesh.coordinates()
 mshcox = mshco[:,0]
@@ -95,7 +95,7 @@ for i in range(max_iter):
     solve(a2==L2,p,bc)
 
     dJ = dot(grad(u),grad(p))
-    print(h)
+    print(f'dJ = {np.array(project(dJ,V).vector())}')
     ddt = dt/np.max(np.abs(np.array(h.vector())))
 
     h = h - ddt*dJ
@@ -145,7 +145,7 @@ for i in range(max_iter):
     # plot objective function
     J = assemble(f_int*u*dx(mesh))
     J_arr = np.append(J_arr,J)
-    print(J)
+    print(f'Objective Function = {J}')
     ax2.scatter(i,J)
 
     if i==max_iter-1:
